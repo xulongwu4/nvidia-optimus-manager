@@ -55,11 +55,42 @@ Sun Dec  2 16:25:42 2018
 +-----------------------------------------------------------------------------+
 ```
 
+## Things to do before installation
+
+- Install the NVIDIA propriate graphics driver
+- Install the `bbswitch` kernel module: if you are using the `linux-current` kernel branch, use the following command:
+```
+eopkg install bbswitch-current
+```
+Otherwise you are on the `linux-lts` branch. In this case use this command to install `bbswitch`:
+```
+eopkg install bbswitch
+```
+
+To load `bbswitch` at boot, do the following:
+```
+$ sudo mkdir -p /etc/modules-load.d
+$ echo -e "# Load 'bbswitch.ko' at boot\nbbswitch" | sudo tee /etc/modules-load.d/bbswitch.conf
+```
+- Blacklist the `nouveau` driver:
+```
+$ sudo mkdir -p /etc/modprobe.d
+$ echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
+```
+
+Reboot to let these changes take effect.
+
 ## Installation
 
 - `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf`
 - `nvidia-optimus-autoconfig.service`: copy to `/etc/systemd/system/nvidia-optimus-autoconfig.service`
 - `nvidia-optimus-manager`: copy to `/usr/bin/nvidia-optimus-manager`
+
+Then enable the service file at boot:
+```
+sudo systemctl daemon-reload
+sudo systemctl enable nvidia-optimus-autoconfig
+```
 
 ## Dependencies
 
@@ -67,7 +98,7 @@ Sun Dec  2 16:25:42 2018
 - [bbswitch](https://github.com/Bumblebee-Project/bbswitch)
 - NVIDIA proprietary graphics driver
 
-# Usage
+## Usage
 
 Three subcommands can be used with the `nvidia-optimus-manager` script:
 - Check the current configuration of the dGPU with the `status` subcommand:
@@ -91,4 +122,4 @@ Log out to take effect
 ```
 Otherwise the switch happens immediately.
 
-- Auto configure the dGPU based on the presence of relevant configuration files (blacklist-nvidia.conf, 00-ldm.conf). This command is used in the systemd service file (nvidia-optimus-autoconfig.service) and the lightdm configuration file (99-nvidia.conf)
+- Automatically configure the dGPU based on the presence of relevant configuration files (blacklist-nvidia.conf, 00-ldm.conf). This command is used in the systemd service file (nvidia-optimus-autoconfig.service) and the lightdm configuration file (99-nvidia.conf)
