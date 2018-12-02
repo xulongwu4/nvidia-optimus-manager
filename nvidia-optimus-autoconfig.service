@@ -1,0 +1,10 @@
+[Unit]
+Description=Automatic configuration for nvidia optimus
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nvidia-optimus-manager autoconfigure
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

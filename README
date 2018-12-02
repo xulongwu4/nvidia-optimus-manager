@@ -1,0 +1,3 @@
+- `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf`
+- `nvidia-optimus-autoconfig.service`: copy to `/etc/systemd/system/nvidia-optimus-autoconfig.service`
+- `nvidia-optimus-manager`: copy to `/usr/bin/nvidia-optimus-manager`
