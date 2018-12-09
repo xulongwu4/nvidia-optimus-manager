@@ -1,39 +1,4 @@
 #!/usr/bin/env python3
-#
-#       prime-select
-#
-#       Copyright 2013 Canonical Ltd.
-#       Author: Alberto Milone <alberto.milone@canonical.com>
-#
-#       Script to switch between NVIDIA and Intel graphics driver libraries.
-#
-#       Usage:
-#           prime-select   nvidia|intel|query
-#           nvidia:   switches to NVIDIA's version of libGL.so
-#           intel: switches to the open-source version of libGL.so
-#           query: checks which version is currently active and writes
-#                  "nvidia", "intel" or "unknown" to the standard output
-#
-#       Permission is hereby granted, free of charge, to any person
-#       obtaining a copy of this software and associated documentation
-#       files (the "Software"), to deal in the Software without
-#       restriction, including without limitation the rights to use,
-#       copy, modify, merge, publish, distribute, sublicense, and/or sell
-#       copies of the Software, and to permit persons to whom the
-#       Software is furnished to do so, subject to the following
-#       conditions:
-#
-#       The above copyright notice and this permission notice shall be
-#       included in all copies or substantial portions of the Software.
-#
-#       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-#       EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-#       OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-#       NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-#       HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-#       WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#       FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-#       OTHER DEALINGS IN THE SOFTWARE.
 
 import glob
 import os
@@ -49,13 +14,18 @@ from subprocess import Popen, PIPE, CalledProcessError, DEVNULL, check_output
 class Switcher(object):
 
     def __init__(self):
-        self._power_profile_path = '/proc/acpi/bbswitch'
-        self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
-        self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
-        self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
         if not self._validate_setting():
             sys.stdout.write('The program is not supported on current platform\nExiting ...\n')
             sys.exit(1)
+
+        self._pci_id = self._get_pci_id()
+        self._power_profile_path = '/sys/bus/pci/devices/%s/power' % self._pci_id
+        self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
+        self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
+        self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
+
+        if not self._is_power_management_enabled():
+            self._enable_power_management()
 
     def _validate_setting(self):
         if not self._check_ldm():
@@ -74,8 +44,8 @@ class Switcher(object):
             sys.stdout.write('The current configuration is not supported\n\n--- NVIDIA proprietary driver is not installed ---\n\n')
             return False
 
-        if not self._check_bbswitch():
-            sys.stdout.write('The current configuration is not supported\n\n--- The bbswitch module is not loaded ---\n\n')
+        if not self._check_pciutils():
+            sys.stdout.write('The current configuration is not supported\n\n--- Command "lspci" cannot be found ---\n\n')
             return False
 
         return True
@@ -97,10 +67,32 @@ class Switcher(object):
         status = subprocess.call(['modinfo', 'nvidia'], stdout=DEVNULL, stderr=DEVNULL)
         return not status
 
-    def _check_bbswitch(self):
-        p1 = Popen(['lsmod'], stdout=PIPE)
-        status = subprocess.call(['grep', 'bbswitch'], stdin=p1.stdout, stdout=DEVNULL)
-        return not status
+    def _check_pciutils(self):
+        return os.path.exists('/usr/bin/lspci')
+
+    def _get_pci_id(self):
+        # Class '0300' is VGA compatible controller
+        # Vendor ID '10de' is NVIDIA Corporation
+        pci_info = check_output(['lspci', '-D', '-d', '10de::0300']).decode('utf-8')
+        return pci_info.split()[0]
+
+    def _enable_power_management(self):
+        p1 = Popen(['echo', 'auto'], stdout=PIPE)
+        subprocess.call(['/usr/bin/tee', self._power_profile_path + '/control'], stdin=p1.stdout, stdout=DEVNULL)
+
+    def _is_power_management_enabled(self):
+        try:
+            settings = open(self._power_profile_path + '/control', 'r')
+            status = settings.read().strip()
+        except:
+            return 'unknown'
+
+        if status == 'auto':
+            return True
+        elif status == 'on':
+            return False
+        else:
+            return 'unknown'
 
     def _get_profile(self):
 
@@ -131,8 +123,8 @@ class Switcher(object):
 
     def _get_nvidia_card_power_status(self):
         try:
-            settings = open(self._power_profile_path, 'r')
-            return settings.read().split()[1]
+            settings = open(self._power_profile_path + '/runtime_status', 'r')
+            return settings.read().strip()
         except:
             return 'unknown'
 
@@ -183,10 +175,11 @@ class Switcher(object):
         subprocess.call(['/usr/bin/linux-driver-management', 'configure', 'gpu'], stdout=DEVNULL, stderr=DEVNULL)
 
     def _enable_nvidia(self):
-        if self._get_nvidia_card_power_status() == 'OFF':
-            self._power_on_nvidia_card()
+        #if self._get_nvidia_card_power_status() == 'OFF':
+        #    self._power_on_nvidia_card()
 
-        if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
+        #if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
+        if self._is_nvidia_offloaded():
             self._load_nvidia_driver()
 
     def _disable_nvidia(self):
@@ -194,8 +187,8 @@ class Switcher(object):
         if not self._is_nvidia_offloaded() and self._get_opengl_vendor() != 'NVIDIA':
             self._unload_nvidia_driver()
 
-        if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
-            self._power_off_nvidia_card()
+        #if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
+        #    self._power_off_nvidia_card()
 
 
     def autoconfigure(self):
@@ -222,7 +215,11 @@ class Switcher(object):
 blacklist nvidia
 blacklist nvidia_drm
 blacklist nvidia_uvm
-blacklist nvidia_modeset'''
+blacklist nvidia_modeset
+install nvidia /bin/false
+install nvidia_drm /bin/false
+install nvidia_uvm /bin/false
+install nvidia_modeset /bin/false'''
         blacklist_fd = open(self._blacklist_file, 'w')
         blacklist_fd.write(blacklist_text)
         blacklist_fd.close()
@@ -235,6 +232,9 @@ blacklist nvidia_modeset'''
         subprocess.call(['/sbin/modprobe', '-r', 'nvidia'])
 
     def _load_nvidia_driver(self):
+        #subprocess.call(['/sbin/modprobe', '--ignore-install', 'nvidia'])
+        # modprobe can correctly load nvidia module without reboot
+        # as long as the blacklist-nvidia.conf file is deleted
         subprocess.call(['/sbin/modprobe', 'nvidia'])
 
     def _is_nvidia_offloaded(self):
@@ -242,13 +242,13 @@ blacklist nvidia_modeset'''
         status = subprocess.call(['grep', 'nvidia'], stdin=p1.stdout, stdout=DEVNULL)
         return status
 
-    def _power_off_nvidia_card(self):
-        p1 = Popen(['echo', 'OFF'], stdout=PIPE)
-        subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
+    #def _power_off_nvidia_card(self):
+    #    p1 = Popen(['echo', 'OFF'], stdout=PIPE)
+    #    subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
 
-    def _power_on_nvidia_card(self):
-        p1 = Popen(['echo', 'ON'], stdout=PIPE)
-        subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
+    #def _power_on_nvidia_card(self):
+    #    p1 = Popen(['echo', 'ON'], stdout=PIPE)
+    #    subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
 
 def check_root():
     if not os.geteuid() == 0:
