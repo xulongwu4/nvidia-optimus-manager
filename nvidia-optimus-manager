@@ -215,11 +215,7 @@ class Switcher(object):
 blacklist nvidia
 blacklist nvidia_drm
 blacklist nvidia_uvm
-blacklist nvidia_modeset
-install nvidia /bin/false
-install nvidia_drm /bin/false
-install nvidia_uvm /bin/false
-install nvidia_modeset /bin/false'''
+blacklist nvidia_modeset'''
         blacklist_fd = open(self._blacklist_file, 'w')
         blacklist_fd.write(blacklist_text)
         blacklist_fd.close()
@@ -232,7 +228,6 @@ install nvidia_modeset /bin/false'''
         subprocess.call(['/sbin/modprobe', '-r', 'nvidia'])
 
     def _load_nvidia_driver(self):
-        #subprocess.call(['/sbin/modprobe', '--ignore-install', 'nvidia'])
         # modprobe can correctly load nvidia module without reboot
         # as long as the blacklist-nvidia.conf file is deleted
         subprocess.call(['/sbin/modprobe', 'nvidia'])
