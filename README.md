@@ -3,7 +3,7 @@
 This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/) desktop.
 
 Three profiles are implemented in the `nvidia-optimus-manager` script:
-- `intel`: The Intel integrated GPU is used for display rendering and the dGPU is powered off by the `bbwsitch` kernel module. Running the `nvidia-smi` command gives
+- `intel`: The Intel integrated GPU is used for display rendering and the dGPU is suspended by runtime power management. Running the `nvidia-smi` command gives
 ```
 $ nvidia-smi
 NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
@@ -58,25 +58,12 @@ Sun Dec  2 16:25:42 2018
 ## Things to do before installation
 
 - Install the NVIDIA propriate graphics driver
-- Install the `bbswitch` kernel module: if you are using the `linux-current` kernel branch, use the following command:
-```
-eopkg install bbswitch-current
-```
-Otherwise you are on the `linux-lts` branch. In this case use this command to install `bbswitch`:
-```
-eopkg install bbswitch
-```
-
-To load `bbswitch` at boot, do the following:
-```
-$ sudo mkdir -p /etc/modules-load.d
-$ echo -e "# Load 'bbswitch.ko' at boot\nbbswitch" | sudo tee /etc/modules-load.d/bbswitch.conf
-```
 - Blacklist the `nouveau` driver:
 ```
 $ sudo mkdir -p /etc/modprobe.d
 $ echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
 ```
+- Install `pciutils` by `sudo eopkg it pciutils`
 
 Reboot to let these changes take effect.
 
@@ -95,8 +82,8 @@ sudo systemctl enable nvidia-optimus-autoconfig
 ## Dependencies
 
 - [Linux-driver-management](https://github.com/solus-project/linux-driver-management)
-- [bbswitch](https://github.com/Bumblebee-Project/bbswitch)
 - NVIDIA proprietary graphics driver
+- `pciutils`: for the `lspci` command to find the pci bus id for the NVIDIA graphics card.
 
 ## Usage
 
@@ -106,7 +93,7 @@ Three subcommands can be used with the `nvidia-optimus-manager` script:
 $ nvidia-optimus-manager status
 Current profile: intel
 OpenGL vendor: Intel
-Discrete graphics card power status: OFF
+Discrete graphics card power status: suspended
 ```
 
 - Switch profile with the `configure` subcommand (requires root previleges):
@@ -122,4 +109,4 @@ Log out to take effect
 ```
 Otherwise the switch happens immediately.
 
-- Automatically configure the dGPU based on the presence of relevant configuration files (blacklist-nvidia.conf, 00-ldm.conf). This command is used in the systemd service file (nvidia-optimus-autoconfig.service) and the lightdm configuration file (99-nvidia.conf)
+- `autoconfigure` subcommand: Automatically configure the dGPU based on the presence of relevant configuration files (blacklist-nvidia.conf, 00-ldm.conf). This command is used in the systemd service file (nvidia-optimus-autoconfig.service) and the lightdm configuration file (99-nvidia.conf)
