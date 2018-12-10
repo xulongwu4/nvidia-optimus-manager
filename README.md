@@ -59,6 +59,7 @@ Sun Dec  2 16:25:42 2018
 
 - Install the NVIDIA proprietary graphics driver
 - Blacklist the `nouveau` driver:
+
 *If you installed the NVIDIA proprietary driver from the Solus repo, this is automatically taken care of.*
 ```
 $ sudo mkdir -p /etc/modprobe.d
