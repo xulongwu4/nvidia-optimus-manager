@@ -142,8 +142,7 @@ class Switcher(object):
         current_opengl_vendor = self._get_opengl_vendor()
 
         if profile == current_profile:
-            # No need to do anything if we're already using the desired
-            # profile
+            # No need to do anything if we're already using the desired profile
             sys.stdout.write('Info: the %s profile is already set\n' % (profile))
             return True
 
@@ -172,10 +171,6 @@ class Switcher(object):
         subprocess.call(['/usr/bin/linux-driver-management', 'configure', 'gpu'], stdout=DEVNULL, stderr=DEVNULL)
 
     def _enable_nvidia(self):
-        #if self._get_nvidia_card_power_status() == 'OFF':
-        #    self._power_on_nvidia_card()
-
-        #if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
         if self._is_nvidia_offloaded():
             self._load_nvidia_driver()
 
@@ -183,10 +178,6 @@ class Switcher(object):
         self._nuke_ldm_conf()
         if not self._is_nvidia_offloaded() and self._get_opengl_vendor() != 'NVIDIA':
             self._unload_nvidia_driver()
-
-        #if self._get_nvidia_card_power_status() == 'ON' and self._is_nvidia_offloaded():
-        #    self._power_off_nvidia_card()
-
 
     def autoconfigure(self):
         # Power management
@@ -238,14 +229,6 @@ blacklist nvidia_modeset'''
         p1 = Popen(['lsmod'], stdout=PIPE)
         status = subprocess.call(['grep', 'nvidia'], stdin=p1.stdout, stdout=DEVNULL)
         return status
-
-    #def _power_off_nvidia_card(self):
-    #    p1 = Popen(['echo', 'OFF'], stdout=PIPE)
-    #    subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
-
-    #def _power_on_nvidia_card(self):
-    #    p1 = Popen(['echo', 'ON'], stdout=PIPE)
-    #    subprocess.call(['/usr/bin/tee', self._power_profile_path], stdin=p1.stdout, stdout=DEVNULL)
 
 def check_root():
     if not os.geteuid() == 0:
