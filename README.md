@@ -57,8 +57,9 @@ Sun Dec  2 16:25:42 2018
 
 ## Things to do before installation
 
-- Install the NVIDIA propriate graphics driver
+- Install the NVIDIA proprietary graphics driver
 - Blacklist the `nouveau` driver:
+*If you installed the NVIDIA proprietary driver from the Solus repo, this is automatically taken care of.*
 ```
 $ sudo mkdir -p /etc/modprobe.d
 $ echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
