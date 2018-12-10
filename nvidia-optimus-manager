@@ -24,9 +24,6 @@ class Switcher(object):
         self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
         self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
 
-        if not self._is_power_management_enabled():
-            self._enable_power_management()
-
     def _validate_setting(self):
         if not self._check_ldm():
             sys.stdout.write('The current configuration is not supported\n\n--- The linux-driver-management program is not installed ---\n\n')
@@ -192,6 +189,11 @@ class Switcher(object):
 
 
     def autoconfigure(self):
+        # Power management
+        if not self._is_power_management_enabled():
+            self._enable_power_management()
+
+        # Profile management
         if os.path.exists(self._blacklist_file):
             self._disable_nvidia()
         else:
