@@ -21,6 +21,7 @@ class Switcher(object):
         self._pci_id = self._get_pci_id()
         self._power_profile_path = '/sys/bus/pci/devices/%s/power' % self._pci_id
         self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
+        self._ldm_hybrid_file = '/var/lib/linux-driver-management/hybrid'
         self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
         self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
 
@@ -158,7 +159,7 @@ class Switcher(object):
         if profile == 'nvidia':
             self._ldm_configure()
         else:
-            self._nuke_ldm_conf()
+            self._nuke_ldm_settings()
 
         self.autoconfigure()
 
@@ -175,7 +176,7 @@ class Switcher(object):
             self._load_nvidia_driver()
 
     def _disable_nvidia(self):
-        self._nuke_ldm_conf()
+        self._nuke_ldm_settings()
         if not self._is_nvidia_offloaded() and self._get_opengl_vendor() != 'NVIDIA':
             self._unload_nvidia_driver()
 
@@ -196,11 +197,21 @@ class Switcher(object):
         except:
             pass
 
-    def _nuke_ldm_conf(self):
+    def _nuke_ldm_conf_file(self):
         try:
             os.unlink(self._ldm_conf_file)
         except:
             pass
+
+    def _nuke_ldm_hybrid_file(self):
+        try:
+            os.unlink(self._ldm_hybrid_file)
+        except:
+            pass
+
+    def _nuke_ldm_settings(self):
+        self._nuke_ldm_conf_file()
+        self._nuke_ldm_hybrid_file()
 
     def _blacklist_nvidia(self):
         blacklist_text = '''# Do not modify
