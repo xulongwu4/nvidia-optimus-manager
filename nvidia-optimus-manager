@@ -161,10 +161,11 @@ class Switcher(object):
         else:
             self._nuke_ldm_settings()
 
-        self.autoconfigure()
-
         if current_opengl_vendor != new_opengl_vendor:
             sys.stdout.write('Log out to take effect\n')
+            return True
+
+        self.autoconfigure()
 
         return True
 
@@ -177,7 +178,7 @@ class Switcher(object):
 
     def _disable_nvidia(self):
         self._nuke_ldm_settings()
-        if not self._is_nvidia_offloaded() and self._get_opengl_vendor() != 'NVIDIA':
+        if not self._is_nvidia_offloaded():
             self._unload_nvidia_driver()
 
     def autoconfigure(self):
