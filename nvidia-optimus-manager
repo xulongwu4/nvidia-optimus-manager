@@ -69,9 +69,8 @@ class Switcher(object):
         return os.path.exists('/usr/bin/lspci')
 
     def _get_pci_id(self):
-        # Class '0300' is VGA compatible controller
         # Vendor ID '10de' is NVIDIA Corporation
-        pci_info = check_output(['lspci', '-D', '-d', '10de::0300']).decode('utf-8')
+        pci_info = check_output(['lspci', '-D', '-d', '10de::']).decode('utf-8')
         return pci_info.split()[0]
 
     def _enable_power_management(self):
