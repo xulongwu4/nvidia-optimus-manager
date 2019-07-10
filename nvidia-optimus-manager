@@ -22,7 +22,7 @@ class Switcher(object):
         self._power_profile_path = '/sys/bus/pci/devices/%s/power' % self._pci_id
         self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
         self._ldm_hybrid_file = '/var/lib/linux-driver-management/hybrid'
-        self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
+        self._blacklist_file = '/usr/lib64/modprobe.d/blacklist-nvidia.conf'
         self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
 
     def _validate_setting(self):
