@@ -62,8 +62,8 @@ Sun Dec  2 16:25:42 2018
 
 *If you installed the NVIDIA proprietary driver from the Solus repo, this is automatically taken care of.*
 ```
-$ sudo mkdir -p /etc/modprobe.d
-$ echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
+$ sudo mkdir -p /usr/lib64/modprobe.d
+$ echo "blacklist nouveau" | sudo tee /usr/lib64/modprobe.d/blacklist-nouveau.conf
 ```
 - Install `pciutils` by `sudo eopkg it pciutils`
 
@@ -71,7 +71,7 @@ Reboot to let these changes take effect.
 
 ## Installation
 
-- `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf`
+- `99-nvidia.conf`: copy to `/usr/share/lightdm/lightdm.conf.d/99-nvidia.conf`
 - `nvidia-optimus-autoconfig.service`: copy to `/etc/systemd/system/nvidia-optimus-autoconfig.service`
 - `nvidia-optimus-manager`: copy to `/usr/bin/nvidia-optimus-manager`
 
