@@ -1,6 +1,6 @@
 ## Introduction
 
-This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/) desktop, and [Gnome](https://www.gnome.org/) desktop.
+This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/) or [Gnome](https://www.gnome.org/) desktop.
 
 Three profiles are implemented in the `nvidia-optimus-manager` script:
 - `intel`: The Intel integrated GPU is used for display rendering and the dGPU is suspended by runtime power management. Running the `nvidia-smi` command gives
