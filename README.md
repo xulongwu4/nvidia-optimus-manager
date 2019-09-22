@@ -54,6 +54,10 @@ Sun Dec  2 16:25:42 2018
 |    0      9126      G   ...-token=215073FE33E4C44F4B99DE67F9B5AA88     9MiB |
 +-----------------------------------------------------------------------------+
 ```
+## AUTOMATED SCRIPT INSTALL
+- Download this repo, extract, cd into nvidia-optimus-manager-master and run: `sh nvidia-optimus-installer.sh`
+- The script will automatically install and configure everything for Gnome or Budgie. 
+- That's it!
 
 ## Things to do before installation
 
@@ -72,7 +76,8 @@ Reboot to let these changes take effect.
 ## Installation
 
 For Budgie: 
-- `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf`
+- `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf` # This may be the old path! User must confirm.
+- `99-nvidia.conf`: copy to `/etc/gdm/99-nvidia.conf` # This is confirmed to be the path for new installs. 
 
 For Gnome:
 - `99-nvidia.conf`: copy to `/etc/gdm/99-nvidia.conf`
