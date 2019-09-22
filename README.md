@@ -56,7 +56,9 @@ Sun Dec  2 16:25:42 2018
 ```
 ## AUTOMATED SCRIPT INSTALL
 - Download this repo, extract, cd into nvidia-optimus-manager-master, and from your terminal, run: 
-    `sh nvidia-optimus-installer.sh`
+    ```
+    sh nvidia-optimus-installer.sh
+    ```
 - The script will automatically install and configure everything for Gnome or Budgie. 
 - That's it!
 
