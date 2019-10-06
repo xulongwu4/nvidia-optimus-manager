@@ -13,8 +13,6 @@ DIR=`pwd`
 SYSD=nvidia-optimus-autoconfig.service
 ####################################
 
-# CHECK FOR PRIVS
-
 clear
 echo ""
 echo "     -------------------------------------------"
