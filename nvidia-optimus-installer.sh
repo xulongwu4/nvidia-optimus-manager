@@ -58,6 +58,30 @@ then
     echo ""
     echo "Installing necessary applications..."
     echo ""
+    sudo eopkg it pciutils
+
+elif [ `echo $XDG_CURRENT_DESKTOP` = "MATE" ]
+then
+  echo ""
+  echo "Setting things up for MATE..."
+  echo ""
+  sleep 2
+  sudo cp $DIR/99-nvidia.conf $GDM/99-nvidia.conf
+  sudo cp $DIR/$OPT $BIN/$OPT
+  sudo cp $DIR/$SYSD /etc/systemd/system/$SYSD
+  echo ""
+  sudo systemctl daemon-reload && sudo systemctl enable nvidia-optimus-autoconfig
+  echo ""
+    # SYSTEM PREP
+    echo ""
+    echo "Getting things ready..."
+    echo ""
+    sudo mkdir -p ${MOD}
+    echo "blacklist nouveau" | sudo tee ${MOD}/blacklist-nouveau.conf
+    echo ""
+    echo "Installing necessary applications..."
+    echo ""
+    sudo eopkg it pciutils
 
 elif [ `echo $XDG_CURRENT_DESKTOP` = "Budgie:GNOME" ]
 then
@@ -81,6 +105,7 @@ then
     echo ""
     echo "Installing necessary applications..."
     echo ""
+    sudo eopkg it pciutils
 fi
 echo ""
 echo "               INSTALLATION COMPLETE!"
