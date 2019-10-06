@@ -26,12 +26,12 @@ echo ""
 clear
 echo ""
 echo "This script will install and autoconfigure"
-echo "the Nvidia-Optimus-Manager for Solus Budgie"
-echo "or Gnome editions."
+echo "the Nvidia-Optimus-Manager for Solus Budgie,"
+echo "MATE, or Gnome editions."
 echo ""
 echo "This WILL require a reboot, once completed"
 echo ""
-sleep 4
+sleep 3
 clear
 
 # DESKTOP CHECKS & CONFIGURATION
