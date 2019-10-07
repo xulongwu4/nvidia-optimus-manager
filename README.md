@@ -1,6 +1,6 @@
 ## Introduction
 
-This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/) or [Gnome](https://www.gnome.org/) desktop.
+This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/), [MATE](https://mate-desktop.org/) or [Gnome](https://www.gnome.org/) desktop.
 
 Three profiles are implemented in the `nvidia-optimus-manager` script:
 - `intel`: The Intel integrated GPU is used for display rendering and the dGPU is suspended by runtime power management. Running the `nvidia-smi` command gives
@@ -55,14 +55,18 @@ Sun Dec  2 16:25:42 2018
 +-----------------------------------------------------------------------------+
 ```
 ## AUTOMATED SCRIPT INSTALL
+- Install the NVIDIA proprietary graphics driver
 - Download this repo, extract, cd into nvidia-optimus-manager-master, and from your terminal, run: 
     ```
     sh nvidia-optimus-installer.sh
     ```
-- The script will automatically install and configure everything for Gnome or Budgie. 
+    Please note: Don't run with `sudo`
+    
+- The script will automatically install and configure everything for Gnome, MATE, or Budgie. 
+- Reboot
 - That's it!
 
-## Things to do before installation
+## Things to do before manual installation
 
 - Install the NVIDIA proprietary graphics driver
 - Blacklist the `nouveau` driver:
@@ -82,10 +86,13 @@ For Budgie:
 - `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf` # This may be the old path! User must confirm.
 - `99-nvidia.conf`: copy to `/etc/gdm/99-nvidia.conf` # This is confirmed to be the path for new installs. 
 
+For MATE:
+- `99-nvidia.conf`: copy to `/etc/gdm/99-nvidia.conf`
+
 For Gnome:
 - `99-nvidia.conf`: copy to `/etc/gdm/99-nvidia.conf`
 
-For Both:
+For ALL:
 - `nvidia-optimus-autoconfig.service`: copy to `/etc/systemd/system/nvidia-optimus-autoconfig.service`
 - `nvidia-optimus-manager`: copy to `/usr/bin/nvidia-optimus-manager`
 
