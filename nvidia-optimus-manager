@@ -12,38 +12,57 @@ from subprocess import Popen, PIPE, CalledProcessError, DEVNULL, check_output
 
 
 class Switcher(object):
-
     def __init__(self):
         if not self._validate_setting():
-            sys.stdout.write('The program is not supported on current platform\nExiting ...\n')
+            sys.stdout.write(
+                'The program is not supported on current platform\nExiting ...\n'
+            )
             sys.exit(1)
 
-        self._pci_id = self._get_pci_id()
-        self._power_profile_path = '/sys/bus/pci/devices/%s/power' % self._pci_id
+        self._pci_info = self._get_pci_info()
+        self._main_pci_id = None
+        for pci_id in self._pci_info:
+            if pci_id.endswith('.0'):
+                self._main_pci_id = pci_id
         self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
         self._ldm_hybrid_file = '/var/lib/linux-driver-management/hybrid'
         self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
-        self._opengl_settings = {'intel': 'Intel', 'hybrid': 'Intel', 'nvidia': 'NVIDIA'}
+        self._nvidia_pm_rules_file = '/etc/udev/rules.d/80-nvidia-pm.rules'
+        self._opengl_settings = {
+            'intel': 'Intel',
+            'hybrid': 'Intel',
+            'nvidia': 'NVIDIA'
+        }
 
     def _validate_setting(self):
         if not self._check_ldm():
-            sys.stdout.write('The current configuration is not supported\n\n--- The linux-driver-management program is not installed ---\n\n')
+            sys.stdout.write(
+                'The current configuration is not supported\n\n--- The linux-driver-management program is not installed ---\n\n'
+            )
             return False
 
         if not self._check_optimus():
-            sys.stdout.write('The current configuration is not supported\n\n--- NVIDIA Optimus hardware is not detected ---\n\n')
+            sys.stdout.write(
+                'The current configuration is not supported\n\n--- NVIDIA Optimus hardware is not detected ---\n\n'
+            )
             return False
 
         if not self._check_nouveau():
-            sys.stdout.write('The current configuration is not supported\n\n--- The nouveau driver needs to be unloaded ---\n\n')
+            sys.stdout.write(
+                'The current configuration is not supported\n\n--- The nouveau driver needs to be unloaded ---\n\n'
+            )
             return False
 
         if not self._check_nvidia_driver():
-            sys.stdout.write('The current configuration is not supported\n\n--- NVIDIA proprietary driver is not installed ---\n\n')
+            sys.stdout.write(
+                'The current configuration is not supported\n\n--- NVIDIA proprietary driver is not installed ---\n\n'
+            )
             return False
 
         if not self._check_pciutils():
-            sys.stdout.write('The current configuration is not supported\n\n--- Command "lspci" cannot be found ---\n\n')
+            sys.stdout.write(
+                'The current configuration is not supported\n\n--- Command "lspci" cannot be found ---\n\n'
+            )
             return False
 
         return True
@@ -53,43 +72,43 @@ class Switcher(object):
 
     def _check_optimus(self):
         p1 = Popen(['/usr/bin/linux-driver-management', 'status'], stdout=PIPE)
-        status = subprocess.call(['grep', '-i', 'optimus'], stdin=p1.stdout, stdout=DEVNULL)
+        status = subprocess.call(['grep', '-i', 'optimus'],
+                                 stdin=p1.stdout,
+                                 stdout=DEVNULL)
         return not status
 
     def _check_nouveau(self):
         p1 = Popen(['lsmod'], stdout=PIPE)
-        status = subprocess.call(['grep', 'nouveau'], stdin=p1.stdout, stdout=DEVNULL)
+        status = subprocess.call(['grep', 'nouveau'],
+                                 stdin=p1.stdout,
+                                 stdout=DEVNULL)
         return status
 
     def _check_nvidia_driver(self):
-        status = subprocess.call(['modinfo', 'nvidia'], stdout=DEVNULL, stderr=DEVNULL)
+        status = subprocess.call(['modinfo', 'nvidia'],
+                                 stdout=DEVNULL,
+                                 stderr=DEVNULL)
         return not status
 
     def _check_pciutils(self):
         return os.path.exists('/usr/bin/lspci')
 
-    def _get_pci_id(self):
+    def _get_pci_info(self):
         # Vendor ID '10de' is NVIDIA Corporation
-        pci_info = check_output(['lspci', '-D', '-d', '10de::']).decode('utf-8')
-        return pci_info.split()[0]
+        pci_info = check_output(['lspci', '-D', '-d',
+                                 '10de::']).decode('utf-8').split('\n')[:-1]
+
+        return dict([line.split(' ', 1) for line in pci_info])
 
     def _enable_power_management(self):
         p1 = Popen(['echo', 'auto'], stdout=PIPE)
-        subprocess.call(['/usr/bin/tee', self._power_profile_path + '/control'], stdin=p1.stdout, stdout=DEVNULL)
-
-    def _is_power_management_enabled(self):
-        try:
-            settings = open(self._power_profile_path + '/control', 'r')
-            status = settings.read().strip()
-        except:
-            return 'unknown'
-
-        if status == 'auto':
-            return True
-        elif status == 'on':
-            return False
-        else:
-            return 'unknown'
+        for pci_id in self._pci_info:
+            pci_func_path = '/sys/bus/pci/devices/' + pci_id
+            if os.path.exists(pci_func_path):
+                subprocess.call(
+                    ['/usr/bin/tee', pci_func_path + '/power/control'],
+                    stdin=p1.stdout,
+                    stdout=DEVNULL)
 
     def _get_profile(self):
 
@@ -99,7 +118,7 @@ class Switcher(object):
             return 'nvidia'
         elif opengl_vendor == 'Intel':
             if self._is_nvidia_offloaded():
-                return 'intel';
+                return 'intel'
             else:
                 return 'hybrid'
         else:
@@ -107,7 +126,10 @@ class Switcher(object):
 
     def _get_opengl_vendor(self):
         try:
-            vendor_str = check_output('glxinfo | grep -i opengl | grep -i vendor', shell=True, stderr=DEVNULL).decode('utf-8').lower()
+            vendor_str = check_output(
+                'glxinfo | grep -i opengl | grep -i vendor',
+                shell=True,
+                stderr=DEVNULL).decode('utf-8').lower()
 
             if 'nvidia' in vendor_str:
                 return 'NVIDIA'
@@ -120,7 +142,9 @@ class Switcher(object):
 
     def _get_nvidia_card_power_status(self):
         try:
-            settings = open(self._power_profile_path + '/runtime_status', 'r')
+            settings = open(
+                '/sys/bus/pci/devices/{}/power/runtime_status'.format(
+                    self._main_pci_id), 'r')
             return settings.read().strip()
         except:
             return 'unknown'
@@ -143,7 +167,8 @@ class Switcher(object):
 
         if profile == current_profile:
             # No need to do anything if we're already using the desired profile
-            sys.stdout.write('Info: the %s profile is already set\n' % (profile))
+            sys.stdout.write('Info: the %s profile is already set\n' %
+                             (profile))
             return True
 
         sys.stdout.write('Info: selecting the %s profile\n' % (profile))
@@ -153,12 +178,14 @@ class Switcher(object):
         if profile == 'intel':
             self._blacklist_nvidia()
         else:
-            self._nuke_blacklist_file()
+            _nuke_config_file(self._blacklist_file)
 
         if profile == 'nvidia':
             self._ldm_configure()
+            _nuke_config_file(self._nvidia_pm_rules_file)
         else:
             self._nuke_ldm_settings()
+            self._generate_nvidia_pm_rules()
 
         if current_opengl_vendor != new_opengl_vendor:
             sys.stdout.write('Log out to take effect\n')
@@ -169,7 +196,10 @@ class Switcher(object):
         return True
 
     def _ldm_configure(self):
-        subprocess.call(['/usr/bin/linux-driver-management', 'configure', 'gpu'], stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.call(
+            ['/usr/bin/linux-driver-management', 'configure', 'gpu'],
+            stdout=DEVNULL,
+            stderr=DEVNULL)
 
     def _enable_nvidia(self):
         if self._is_nvidia_offloaded():
@@ -182,8 +212,7 @@ class Switcher(object):
 
     def autoconfigure(self):
         # Power management
-        if not self._is_power_management_enabled():
-            self._enable_power_management()
+        self._enable_power_management()
 
         # Profile management
         if os.path.exists(self._blacklist_file):
@@ -191,31 +220,14 @@ class Switcher(object):
         else:
             self._enable_nvidia()
 
-    def _nuke_blacklist_file(self):
-        try:
-            os.unlink(self._blacklist_file)
-        except:
-            pass
-
-    def _nuke_ldm_conf_file(self):
-        try:
-            os.unlink(self._ldm_conf_file)
-        except:
-            pass
-
-    def _nuke_ldm_hybrid_file(self):
-        try:
-            os.unlink(self._ldm_hybrid_file)
-        except:
-            pass
-
     def _nuke_ldm_settings(self):
-        self._nuke_ldm_conf_file()
-        self._nuke_ldm_hybrid_file()
+        _nuke_config_file(self._ldm_conf_file)
+        _nuke_config_file(self._ldm_hybrid_file)
 
     def _blacklist_nvidia(self):
         blacklist_text = '''# Do not modify
 # This file was generated by nvidia-optimus-manager
+
 blacklist nvidia
 blacklist nvidia_drm
 blacklist nvidia_uvm
@@ -223,6 +235,34 @@ blacklist nvidia_modeset'''
         blacklist_fd = open(self._blacklist_file, 'w')
         blacklist_fd.write(blacklist_text)
         blacklist_fd.close()
+
+    def _generate_nvidia_pm_rules(self):
+        udev_rules_text = '''# Do not modify
+# This file was generated by nvidia-optimus-manager
+
+# Remove NVIDIA USB xHCI Host Controller devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{remove}="1"
+
+# Remove NVIDIA USB Type-C UCSI devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{remove}="1"
+
+# Remove NVIDIA Audio devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{remove}="1"
+'''
+        udev_rules_fd = open(self._nvidia_pm_rules_file, 'w')
+        udev_rules_fd.write(udev_rules_text)
+        udev_rules_fd.close()
+
+        p1 = Popen(['echo', '1'], stdout=PIPE)
+        for pci_id in self._pci_info:
+            pci_func_path = '/sys/bus/pci/devices/' + pci_id
+            if pci_id != self._main_pci_id and os.path.exists(pci_func_path):
+                subprocess.call([
+                    '/usr/bin/tee',
+                    '/sys/bus/pci/devices/{}/remove'.format(pci_id)
+                ],
+                                stdin=p1.stdout,
+                                stdout=DEVNULL)
 
     def _unload_nvidia_driver(self):
         subprocess.call(['/usr/bin/systemctl', 'stop', 'nvidia-persistenced'])
@@ -238,23 +278,36 @@ blacklist nvidia_modeset'''
 
     def _is_nvidia_offloaded(self):
         p1 = Popen(['lsmod'], stdout=PIPE)
-        status = subprocess.call(['grep', 'nvidia'], stdin=p1.stdout, stdout=DEVNULL)
+        status = subprocess.call(['grep', 'nvidia'],
+                                 stdin=p1.stdout,
+                                 stdout=DEVNULL)
         return status
+
+
+def _nuke_config_file(filename):
+    try:
+        os.unlink(filename)
+    except:
+        pass
+
 
 def check_root():
     if not os.geteuid() == 0:
         sys.stderr.write("This operation requires root privileges\n")
         exit(1)
 
+
 def handle_query_error():
     sys.stderr.write("Error: no profile can be found\n")
     exit(1)
+
 
 def usage():
     sys.stderr.write("Usage:\n")
     sys.stderr.write("    %s status\n" % (sys.argv[0]))
     sys.stderr.write("    %s configure nvidia|hybrid|intel\n" % (sys.argv[0]))
     sys.stderr.write("    %s autoconfigure\n" % (sys.argv[0]))
+
 
 if __name__ == '__main__':
     try:
