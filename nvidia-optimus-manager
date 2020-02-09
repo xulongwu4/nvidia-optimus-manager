@@ -19,8 +19,11 @@ class Switcher(object):
             )
             sys.exit(1)
 
-        self._pci_id = self._get_pci_id()
-        self._power_profile_path = '/sys/bus/pci/devices/%s/power' % self._pci_id
+        self._pci_info = self._get_pci_info()
+        self._main_pci_id = None
+        for pci_id in self._pci_info:
+            if pci_id.endswith('.0'):
+                self._main_pci_id = pci_id
         self._ldm_conf_file = '/etc/X11/xorg.conf.d/00-ldm.conf'
         self._ldm_hybrid_file = '/var/lib/linux-driver-management/hybrid'
         self._blacklist_file = '/etc/modprobe.d/blacklist-nvidia.conf'
@@ -90,32 +93,22 @@ class Switcher(object):
     def _check_pciutils(self):
         return os.path.exists('/usr/bin/lspci')
 
-    def _get_pci_id(self):
+    def _get_pci_info(self):
         # Vendor ID '10de' is NVIDIA Corporation
         pci_info = check_output(['lspci', '-D', '-d',
-                                 '10de::']).decode('utf-8')
-        return pci_info.split()[0]
+                                 '10de::']).decode('utf-8').split('\n')[:-1]
+
+        return dict([line.split(' ', 1) for line in pci_info])
 
     def _enable_power_management(self):
         p1 = Popen(['echo', 'auto'], stdout=PIPE)
-        subprocess.call(
-            ['/usr/bin/tee', self._power_profile_path + '/control'],
-            stdin=p1.stdout,
-            stdout=DEVNULL)
-
-    def _is_power_management_enabled(self):
-        try:
-            settings = open(self._power_profile_path + '/control', 'r')
-            status = settings.read().strip()
-        except:
-            return 'unknown'
-
-        if status == 'auto':
-            return True
-        elif status == 'on':
-            return False
-        else:
-            return 'unknown'
+        for pci_id in self._pci_info:
+            pci_func_path = '/sys/bus/pci/devices/' + pci_id
+            if os.path.exists(pci_func_path):
+                subprocess.call(
+                    ['/usr/bin/tee', pci_func_path + '/power/control'],
+                    stdin=p1.stdout,
+                    stdout=DEVNULL)
 
     def _get_profile(self):
 
@@ -149,7 +142,9 @@ class Switcher(object):
 
     def _get_nvidia_card_power_status(self):
         try:
-            settings = open(self._power_profile_path + '/runtime_status', 'r')
+            settings = open(
+                '/sys/bus/pci/devices/{}/power/runtime_status'.format(
+                    self._main_pci_id), 'r')
             return settings.read().strip()
         except:
             return 'unknown'
@@ -183,11 +178,11 @@ class Switcher(object):
         if profile == 'intel':
             self._blacklist_nvidia()
         else:
-            self._nuke_blacklist_file()
+            _nuke_config_file(self._blacklist_file)
 
         if profile == 'nvidia':
             self._ldm_configure()
-            self._nuke_nvidia_pm_rules()
+            _nuke_config_file(self._nvidia_pm_rules_file)
         else:
             self._nuke_ldm_settings()
             self._generate_nvidia_pm_rules()
@@ -217,8 +212,7 @@ class Switcher(object):
 
     def autoconfigure(self):
         # Power management
-        if not self._is_power_management_enabled():
-            self._enable_power_management()
+        self._enable_power_management()
 
         # Profile management
         if os.path.exists(self._blacklist_file):
@@ -226,33 +220,9 @@ class Switcher(object):
         else:
             self._enable_nvidia()
 
-    def _nuke_blacklist_file(self):
-        try:
-            os.unlink(self._blacklist_file)
-        except:
-            pass
-
-    def _nuke_ldm_conf_file(self):
-        try:
-            os.unlink(self._ldm_conf_file)
-        except:
-            pass
-
-    def _nuke_ldm_hybrid_file(self):
-        try:
-            os.unlink(self._ldm_hybrid_file)
-        except:
-            pass
-
     def _nuke_ldm_settings(self):
-        self._nuke_ldm_conf_file()
-        self._nuke_ldm_hybrid_file()
-
-    def _nuke_nvidia_pm_rules(self):
-        try:
-            os.unlink(self._nvidia_pm_rules_file)
-        except:
-            pass
+        _nuke_config_file(self._ldm_conf_file)
+        _nuke_config_file(self._ldm_hybrid_file)
 
     def _blacklist_nvidia(self):
         blacklist_text = '''# Do not modify
@@ -283,12 +253,16 @@ ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300"
         udev_rules_fd.write(udev_rules_text)
         udev_rules_fd.close()
 
-        if os.path.exists('/sys/bus/pci/devices/0000:01:00.1'):
-            p1 = Popen(['echo', '1'], stdout=PIPE)
-            subprocess.call(
-                ['/usr/bin/tee', '/sys/bus/pci/devices/0000:01:00.1/remove'],
-                stdin=p1.stdout,
-                stdout=DEVNULL)
+        p1 = Popen(['echo', '1'], stdout=PIPE)
+        for pci_id in self._pci_info:
+            pci_func_path = '/sys/bus/pci/devices/' + pci_id
+            if pci_id != self._main_pci_id and os.path.exists(pci_func_path):
+                subprocess.call([
+                    '/usr/bin/tee',
+                    '/sys/bus/pci/devices/{}/remove'.format(pci_id)
+                ],
+                                stdin=p1.stdout,
+                                stdout=DEVNULL)
 
     def _unload_nvidia_driver(self):
         subprocess.call(['/usr/bin/systemctl', 'stop', 'nvidia-persistenced'])
@@ -308,6 +282,13 @@ ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300"
                                  stdin=p1.stdout,
                                  stdout=DEVNULL)
         return status
+
+
+def _nuke_config_file(filename):
+    try:
+        os.unlink(filename)
+    except:
+        pass
 
 
 def check_root():
