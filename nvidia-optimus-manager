@@ -157,7 +157,7 @@ class Switcher(object):
         print('OpenGL vendor: %s' % vendor)
 
         power = self._get_nvidia_card_power_status()
-        print('Discrete graphics card power status: %s' % power)
+        print('dGPU Status: %s' % power)
 
         return True
 
@@ -188,7 +188,7 @@ class Switcher(object):
             self._generate_nvidia_pm_rules()
 
         if current_opengl_vendor != new_opengl_vendor:
-            sys.stdout.write('Log out to take effect\n')
+            sys.stdout.write('Reboot for the changes to take effect\n')
             return True
 
         self.autoconfigure()
