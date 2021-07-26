@@ -1,6 +1,7 @@
 ## Introduction
 
 This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/), [KDE Plasma](https://kde.org/it/plasma-desktop/), [GNOME](https://www.gnome.org/) and [MATE](https://mate-desktop.org/). 
+The original contributors of this repo are @xulongwu4 and [@kz6fittycent's fork](https://github.com/kz6fittycent/nvidia-optimus-manager) from which I forked , added the few missing pieces of the puzzles and put everything together. I'll do my best to update and improving the existing project, if needed! 
 
 
 Three profiles are implemented in the `nvidia-optimus-manager` script:
