@@ -34,26 +34,28 @@ Thu Jul  26 14:50:40 2021
 - `nvidia`: The dGPU will be used as the sole source of rendering. Running the `nvidia-smi` command produces
 ```
 $ nvidia-smi
-Sun Dec  2 16:25:42 2018       
+Mon Jul 26 16:20:49 2021       
 +-----------------------------------------------------------------------------+
-| NVIDIA-SMI 410.78       Driver Version: 410.78       CUDA Version: 10.0     |
+| NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
 |-------------------------------+----------------------+----------------------+
 | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
 | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
 |===============================+======================+======================|
-|   0  GeForce GTX 106...  On   | 00000000:01:00.0 Off |                  N/A |
-| N/A   48C    P0    23W /  N/A |    207MiB /  6078MiB |      6%      Default |
+|   0  NVIDIA GeForce ...  On   | 00000000:02:00.0 Off |                  N/A |
+| N/A   52C    P0    N/A /  N/A |    239MiB /  4042MiB |      2%      Default |
+|                               |                      |                  N/A |
 +-------------------------------+----------------------+----------------------+
                                                                                
 +-----------------------------------------------------------------------------+
-| Processes:                                                       GPU Memory |
-|  GPU       PID   Type   Process name                             Usage      |
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
 |=============================================================================|
-|    0      8485      G   /usr/lib64/xorg-server/Xorg                  137MiB |
-|    0      8726      G   budgie-wm                                     44MiB |
-|    0      8995      G   ...-token=F8BB065232F55048CF73ECAC02D5EDA6     5MiB |
-|    0      9092      G   ...-token=AEC61D9914CB773E37DFD8EFFFFEB6DB     7MiB |
-|    0      9126      G   ...-token=215073FE33E4C44F4B99DE67F9B5AA88     9MiB |
+|    0   N/A  N/A       724      G   /usr/lib64/xorg-server/Xorg       124MiB |
+|    0   N/A  N/A       954      G   /usr/bin/kwin_x11                  33MiB |
+|    0   N/A  N/A      1006      G   /usr/bin/plasmashell               26MiB |
+|    0   N/A  N/A      1239      G   /usr/bin/telegram-desktop          51MiB |
 +-----------------------------------------------------------------------------+
 ```
 
