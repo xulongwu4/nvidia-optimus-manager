@@ -72,6 +72,8 @@ $ sudo ./nvidia-optimus-installer-x.sh
 ```
 - Where the x stands for the Desktop Environment you're using on Solus (KDE, Budgie, GNOME, MATE).
 
+If you're running on the iGPU and you wanna take really advantage of the low power consumption of the integrated graphics chip, while at the same time, using the dGPU at its peak, check out [auto-cpufreq](https://github.com/AdnanHodzic/auto-cpufreq). It's honestly a great and powerful tool, that really gives the +1 to the existing configuration. (Completely optional, but I personally suggest it).
+
 ## Dependencies
 
 - NVIDIA proprietary graphics driver needs to be installed prior to the execution of the script.
