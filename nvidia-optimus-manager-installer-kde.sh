@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Automated script to install nvidia-optimus-manager
+# Automated script for KDE Plasma
 
 # VARIABLES
 ####################################
