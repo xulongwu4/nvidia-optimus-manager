@@ -1,6 +1,7 @@
 ## Introduction
 
-This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/) desktop.
+This repository has a set of tools to manage the status of the NVIDIA graphics card on an Optimus™ setup. It now supports [Solus](https://getsol.us/home/) with [Budgie](https://budgie-desktop.org/home/), [KDE Plasma](https://kde.org/it/plasma-desktop/), [GNOME](https://www.gnome.org/) and [MATE](https://mate-desktop.org/). 
+
 
 Three profiles are implemented in the `nvidia-optimus-manager` script:
 - `intel`: The Intel integrated GPU is used for display rendering and the dGPU is suspended by runtime power management. Running the `nvidia-smi` command gives
@@ -8,25 +9,25 @@ Three profiles are implemented in the `nvidia-optimus-manager` script:
 $ nvidia-smi
 NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
 ```
-- `hybrid`: The Intel iGPU is used for display rendering while the dGPU is still on and its driver is loaded for other tasks (e.g., deep learning, etc.). In this configuration, the `nvidia-smi` command produces the following output:
+- `hybrid`: The Intel iGPU is used for display rendering while the dGPU is still on and its driver is loaded for other tasks (e.g., deep learning, Gaming etc.). In this configuration, the `nvidia-smi` command produces the following output:
 ```
 $ nvidia-smi
-Sun Dec  2 16:22:40 2018       
+Thu Jul  26 14:50:40 2021       
 +-----------------------------------------------------------------------------+
-| NVIDIA-SMI 410.78       Driver Version: 410.78       CUDA Version: 10.0     |
+| NVIDIA-SMI 470.57.02   Driver Version: 470.57.02      CUDA Version: 11.4    |
 |-------------------------------+----------------------+----------------------+
 | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
 | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
 |===============================+======================+======================|
-|   0  GeForce GTX 106...  On   | 00000000:01:00.0 Off |                  N/A |
-| N/A   43C    P0    23W /  N/A |      0MiB /  6078MiB |      0%      Default |
+|   0  NVIDIA GeForce ...  Off  | 00000000:02:00.0 Off |                  N/A |
+| N/A   43C    P0    N/A /  N/A |      0MiB /  6078MiB |      0%      Default |
 +-------------------------------+----------------------+----------------------+
                                                                                
 +-----------------------------------------------------------------------------+
 | Processes:                                                       GPU Memory |
 |  GPU       PID   Type   Process name                             Usage      |
 |=============================================================================|
-|  No running processes found                                                 |
+|   0   N/A  N/A      1538      G   /usr/lib/xorg/Xorg                  4MiB  |
 +-----------------------------------------------------------------------------+
 ```
 - `nvidia`: The dGPU will be used as the sole source of rendering. Running the `nvidia-smi` command produces
@@ -58,34 +59,21 @@ Sun Dec  2 16:25:42 2018
 ## Things to do before installation
 
 - Install the NVIDIA proprietary graphics driver
-- Blacklist the `nouveau` driver:
-
-*If you installed the NVIDIA proprietary driver from the Solus repo, this is automatically taken care of.*
-```
-$ sudo mkdir -p /etc/modprobe.d
-$ echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
-```
-- Install `pciutils` by `sudo eopkg it pciutils`
-
-Reboot to let these changes take effect.
 
 ## Installation
 
-- `99-nvidia.conf`: copy to `/etc/lightdm/lightdm.conf.d/99-nvidia.conf`
-- `nvidia-optimus-autoconfig.service`: copy to `/etc/systemd/system/nvidia-optimus-autoconfig.service`
-- `nvidia-optimus-manager`: copy to `/usr/bin/nvidia-optimus-manager`
+- Download the following repo, and unpack it somewhere. Then, open up a terminal from within the folder, and copy-paste the following commands (obv, do not copy the $ symbol):
+```
+$ sudo chmod +x nvidia-optimus-installer-x.sh
 
-Then enable the service file at boot:
+$ sudo ./nvidia-optimus-installer-x.sh
+
 ```
-sudo systemctl daemon-reload
-sudo systemctl enable nvidia-optimus-autoconfig
-```
+- Where the x stands for the Desktop Environment you're using on Solus (KDE, Budgie, GNOME, MATE).
 
 ## Dependencies
 
-- [Linux-driver-management](https://github.com/solus-project/linux-driver-management)
-- NVIDIA proprietary graphics driver
-- `pciutils`: for the `lspci` command to find the pci bus id for the NVIDIA graphics card.
+- NVIDIA proprietary graphics driver needs to be installed prior to the execution of the script.
 
 ## Usage
 
