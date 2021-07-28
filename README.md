@@ -88,7 +88,7 @@ Three subcommands can be used with the `nvidia-optimus-manager` script:
 $ nvidia-optimus-manager status
 Current profile: intel
 OpenGL vendor: Intel
-Discrete graphics card power status: suspended
+dGPU Status: suspended
 ```
 
 - Switch profile with the `configure` subcommand (requires root previleges):
@@ -100,7 +100,7 @@ If the graphic card for the display rendering is changed during the switch of pr
 ```
 $ nvidia-optimus-manager configure nvidia
 Info: selecting the nvidia profile
-Log out to take effect
+Reboot for the changes to take effect
 ```
 Otherwise the switch happens immediately.
 
